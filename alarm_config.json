@@ -1,12 +1,16 @@
 {
   "version": 2,
-  "theme": "dark",
+  "theme": "system",
+  "language": "vi",
+  "timezone": "Asia/Ho_Chi_Minh",
+  "time_format": "24h",
+  "accent_color": "#f66151",
   "music_library": [],
   "alarms": [
     {
-      "id": "aff4e521-8326-4ef5-8aac-b3bd051ac976",
-      "name": "Dat do an",
-      "time": "10:00",
+      "id": "6c74374b-82c7-4d66-857c-8d07d6677fe7",
+      "name": "1",
+      "time": "07:00",
       "enabled": true,
       "days": {
         "T2": true,
@@ -14,8 +18,8 @@
         "T4": true,
         "T5": true,
         "T6": true,
-        "T7": false,
-        "CN": false
+        "T7": true,
+        "CN": true
       },
       "sound_mode": "system",
       "sound_path": "",
