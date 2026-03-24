@@ -1,2 +1,8 @@
 venv/
 __pycache__/
+*.deb
+debian/.debhelper/
+debian/files
+debian/substvars
+debian/debhelper-build-stamp
+obj-x86_64-linux-gnu/

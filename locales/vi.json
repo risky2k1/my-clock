@@ -1,5 +1,5 @@
 {
-  "app.title": "Linux Smart Alarm",
+  "app.title": "Custom Clock",
   "menu.settings": "Cài đặt",
   "menu.open_settings": "Cài đặt…",
   "page.title": "Báo thức",
@@ -28,6 +28,7 @@
   "settings.time_format": "Định dạng giờ",
   "settings.24h": "24 giờ",
   "settings.12h": "12 giờ (SA / CH)",
+  "settings.start_with_pc": "Khởi động cùng máy (khi đăng nhập)",
   "settings.accent": "Màu nhấn",
   "settings.pick_color": "Chọn màu…",
   "settings.music": "Nhạc báo thức",

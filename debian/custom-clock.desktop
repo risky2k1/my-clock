@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Custom Clock
+Comment=Desktop alarm clock
+Exec=custom-clock
+Icon=preferences-system-time
+Type=Application
+Categories=Utility;Clock;
+StartupNotify=true

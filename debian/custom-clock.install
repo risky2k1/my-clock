@@ -1,0 +1,8 @@
+main.py usr/share/custom-clock/
+requirements.txt usr/share/custom-clock/
+locales/vi.json usr/share/custom-clock/locales/
+locales/en.json usr/share/custom-clock/locales/
+assets/trash.png usr/share/custom-clock/assets/
+assets/trash-solid.png usr/share/custom-clock/assets/
+bin/custom-clock usr/bin/
+debian/custom-clock.desktop usr/share/applications/

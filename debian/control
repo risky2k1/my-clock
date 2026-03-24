@@ -1,0 +1,13 @@
+Source: custom-clock
+Section: utils
+Priority: optional
+Maintainer: Custom Clock <none@localhost>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.6.2
+Rules-Requires-Root: no
+
+Package: custom-clock
+Architecture: all
+Depends: python3:any, python3-pyqt6, ${misc:Depends}
+Description: desktop alarm clock for Linux
+ PyQt6-based alarm clock with optional login autostart via settings.

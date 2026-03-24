@@ -1,0 +1,8 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: custom-clock
+
+Files: *
+Copyright: Copyright 2026 custom-clock authors
+License: unknown
+ Upstream does not ship a standalone LICENSE file; adjust this stanza
+ if you publish the package under a specific license.

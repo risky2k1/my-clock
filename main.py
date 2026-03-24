@@ -1,5 +1,6 @@
 import json
 import os
+import shlex
 import subprocess
 import sys
 import uuid
@@ -61,9 +62,75 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-CONFIG_FILE = "alarm_config.json"
-LOCALES_DIR = Path(__file__).resolve().parent / "locales"
-ASSETS_DIR = Path(__file__).resolve().parent / "assets"
+_APP_DIR = Path(__file__).resolve().parent
+LOCALES_DIR = _APP_DIR / "locales"
+ASSETS_DIR = _APP_DIR / "assets"
+AUTOSTART_DESKTOP_NAME = "custom-clock.desktop"
+
+
+def config_file_path() -> Path:
+    base = Path(os.environ.get("XDG_CONFIG_HOME", str(Path.home() / ".config")))
+    d = base / "custom-clock"
+    d.mkdir(parents=True, exist_ok=True)
+    return d / "alarm_config.json"
+
+
+def _legacy_config_path() -> Path:
+    return _APP_DIR / "alarm_config.json"
+
+
+def _maybe_migrate_config_file() -> None:
+    target = config_file_path()
+    if target.exists():
+        return
+    legacy = _legacy_config_path()
+    if legacy.exists():
+        try:
+            target.write_bytes(legacy.read_bytes())
+        except OSError:
+            pass
+
+
+def _autostart_exec_line() -> str:
+    argv0 = Path(sys.argv[0]).resolve()
+    if argv0.suffix == ".py" or argv0.name.endswith(".py"):
+        py = Path(sys.executable).resolve()
+        return f"{shlex.quote(str(py))} {shlex.quote(str(argv0))}"
+    return shlex.quote(str(argv0))
+
+
+def autostart_desktop_path() -> Path:
+    base = Path(os.environ.get("XDG_CONFIG_HOME", str(Path.home() / ".config")))
+    return base / "autostart" / AUTOSTART_DESKTOP_NAME
+
+
+def set_login_autostart(enabled: bool) -> None:
+    path = autostart_desktop_path()
+    if not enabled:
+        try:
+            path.unlink(missing_ok=True)
+        except OSError:
+            pass
+        return
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        body = (
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Version=1.0\n"
+            "Name=Custom Clock\n"
+            "Comment=Desktop alarm clock\n"
+            f"Exec={_autostart_exec_line()}\n"
+            "Terminal=false\n"
+            "Categories=Utility;Clock;\n"
+        )
+        path.write_text(body, encoding="utf-8")
+        try:
+            path.chmod(0o644)
+        except OSError:
+            pass
+    except OSError:
+        pass
 TRASH_ICON_OUTLINE = ASSETS_DIR / "trash.png"
 TRASH_ICON_SOLID = ASSETS_DIR / "trash-solid.png"
 DAY_KEYS = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"]
@@ -889,6 +956,7 @@ class SettingsDialog(QDialog):
         timezone: str,
         time_format: str,
         accent: str,
+        start_with_pc: bool,
         t: Callable[[str], str],
         parent=None,
     ):
@@ -949,6 +1017,10 @@ class SettingsDialog(QDialog):
             self.combo_tf.setCurrentIndex(0)
         layout.addWidget(self.combo_tf)
 
+        self.chk_autostart = QCheckBox(t("settings.start_with_pc"))
+        self.chk_autostart.setChecked(start_with_pc)
+        layout.addWidget(self.chk_autostart)
+
         layout.addWidget(QLabel(t("settings.accent")))
         acc_row = QHBoxLayout()
         self.lbl_accent_hex = QLabel(self._accent)
@@ -1006,6 +1078,9 @@ class SettingsDialog(QDialog):
     def theme_result(self) -> str:
         return self.combo_theme.currentData()
 
+    def start_with_pc_result(self) -> bool:
+        return self.chk_autostart.isChecked()
+
     def music_library_result(self) -> list:
         return self._music_library
 
@@ -1020,6 +1095,7 @@ class ModernAlarm(QMainWindow):
         self.timezone: str = "Asia/Ho_Chi_Minh"
         self.time_format: str = "24h"
         self.accent_color: str = "#1e8e3e"
+        self.start_with_pc: bool = False
         self.alarm_process = None
         self._last_fire_key: dict = {}
         self._snooze_until: dict = {}
@@ -1029,6 +1105,7 @@ class ModernAlarm(QMainWindow):
         self._build_menu()
         self._build_central()
 
+        _maybe_migrate_config_file()
         self.load_settings()
         self._refresh_ui_texts()
         self._apply_theme()
@@ -1103,6 +1180,7 @@ class ModernAlarm(QMainWindow):
             self.timezone,
             self.time_format,
             self.accent_color,
+            self.start_with_pc,
             self.t,
             self,
         )
@@ -1114,6 +1192,7 @@ class ModernAlarm(QMainWindow):
         self.timezone = dlg.timezone_result()
         self.time_format = dlg.time_format_result()
         self.accent_color = dlg.accent_result()
+        self.start_with_pc = dlg.start_with_pc_result()
         self.save_settings()
         self._refresh_ui_texts()
         self._apply_theme()
@@ -1281,7 +1360,8 @@ class ModernAlarm(QMainWindow):
         }
 
     def load_settings(self):
-        if not os.path.exists(CONFIG_FILE):
+        cfg = config_file_path()
+        if not cfg.exists():
             self.alarms = []
             self.music_library = []
             self.theme_mode = "dark"
@@ -1289,10 +1369,12 @@ class ModernAlarm(QMainWindow):
             self.timezone = "Asia/Ho_Chi_Minh"
             self.time_format = "24h"
             self.accent_color = "#1e8e3e"
+            self.start_with_pc = False
             self._reload_alarm_list()
+            set_login_autostart(self.start_with_pc)
             return
         try:
-            with open(CONFIG_FILE, "r", encoding="utf-8") as f:
+            with open(cfg, "r", encoding="utf-8") as f:
                 raw = json.load(f)
             data = self._migrate_old_config(raw)
             self.music_library = data.get("music_library", [])
@@ -1308,9 +1390,12 @@ class ModernAlarm(QMainWindow):
             if self.time_format not in ("12h", "24h"):
                 self.time_format = "24h"
             self.accent_color = data.get("accent_color", "#1e8e3e") or "#1e8e3e"
+            self.start_with_pc = bool(data.get("start_with_pc", False))
             self._reload_alarm_list()
             if raw.get("version") != 2:
                 self.save_settings()
+            else:
+                set_login_autostart(self.start_with_pc)
         except (json.JSONDecodeError, OSError):
             self.alarms = []
             self.music_library = []
@@ -1319,6 +1404,8 @@ class ModernAlarm(QMainWindow):
             self.timezone = "Asia/Ho_Chi_Minh"
             self.time_format = "24h"
             self.accent_color = "#1e8e3e"
+            self.start_with_pc = False
+            set_login_autostart(self.start_with_pc)
 
     def save_settings(self):
         data = {
@@ -1328,11 +1415,14 @@ class ModernAlarm(QMainWindow):
             "timezone": self.timezone,
             "time_format": self.time_format,
             "accent_color": self.accent_color,
+            "start_with_pc": self.start_with_pc,
             "music_library": self.music_library,
             "alarms": self.alarms,
         }
-        with open(CONFIG_FILE, "w", encoding="utf-8") as f:
+        cfg = config_file_path()
+        with open(cfg, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2, ensure_ascii=False)
+        set_login_autostart(self.start_with_pc)
 
     def _new_alarm(self):
         dlg = AlarmEditorDialog(

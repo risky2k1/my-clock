@@ -1,5 +1,5 @@
 {
-  "app.title": "Linux Smart Alarm",
+  "app.title": "Custom Clock",
   "menu.settings": "Settings",
   "menu.open_settings": "Settings…",
   "page.title": "Alarms",
@@ -28,6 +28,7 @@
   "settings.time_format": "Time format",
   "settings.24h": "24-hour",
   "settings.12h": "12-hour (AM / PM)",
+  "settings.start_with_pc": "Start automatically when logging in",
   "settings.accent": "Accent color",
   "settings.pick_color": "Pick color…",
   "settings.music": "Alarm sounds",
