@@ -1,0 +1,26 @@
+{
+  "version": 2,
+  "theme": "dark",
+  "music_library": [],
+  "alarms": [
+    {
+      "id": "aff4e521-8326-4ef5-8aac-b3bd051ac976",
+      "name": "Dat do an",
+      "time": "10:00",
+      "enabled": true,
+      "days": {
+        "T2": true,
+        "T3": true,
+        "T4": true,
+        "T5": true,
+        "T6": true,
+        "T7": false,
+        "CN": false
+      },
+      "sound_mode": "system",
+      "sound_path": "",
+      "ring_duration_sec": 120,
+      "snooze_minutes": 5
+    }
+  ]
+}
